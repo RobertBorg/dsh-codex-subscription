@@ -24,10 +24,7 @@ pnpm --dir "$env:USERPROFILE\.dsh\profiles\web" exec dsh-import-codex --profile 
 pnpm --dir "$env:USERPROFILE\.dsh\profiles\web" exec dsh-import-codex --profile web
 ```
 
-> ⚠️ 已知问题:npm 包 `dsh-session-import-codex@0.1.0` 漏声明了
-> `@deepseek-ai/dsh-sdk-protocol` 依赖,直接安装后 CLI 报
-> `Cannot find package '@deepseek-ai/dsh-sdk-protocol'`,补装一次即可:
-> `dsh plugin --profile web add @deepseek-ai/dsh-sdk-protocol`。
+> ℹ️ `dsh-session-import-codex@0.1.1` 起已正确声明全部依赖,直接安装即可。
 
 ## 原理
 
