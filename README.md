@@ -50,7 +50,22 @@ test/smoke.mjs  端到端冒烟测试(只读,绝不写 auth.json)
 
 ## 安装(dsh 官方插件命令)
 
-本机已安装 pnpm(`dsh plugin` 会转发给它)。安装已发布的包:
+### 前置条件
+
+1. **已安装 dsh 本体**(本插件是 dsh 的 profile 层,必须先有 dsh):
+   ```powershell
+   npm install -g @deepseek-ai/dsh
+   dsh --version   # 确认命令可用
+   ```
+   > 若提示 `无法将"dsh"项识别为 cmdlet…` / `dsh: command not found`,
+   > 说明 dsh 尚未安装或不在 PATH,与插件无关。
+2. **已安装 pnpm**(`dsh plugin` 会转发给它;缺失时 CLI 会提示)。
+3. **已登录 Codex CLI**:`codex login`(插件直接复用其凭证,无需 API Key)。
+4. **能访问 chatgpt.com**(国内网络通常需要代理,见下文"机器相关配置")。
+
+### 安装插件
+
+安装已发布的包:
 
 ```powershell
 dsh plugin --profile web add dsh-llm-codex
