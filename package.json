@@ -29,7 +29,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/yequ172672/dsh-llm-codex.git"
+    "url": "git+https://github.com/yequ172672/dsh-codex-subscription.git"
   },
   "dsh": {
     "bundle": {
