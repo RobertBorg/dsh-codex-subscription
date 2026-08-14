@@ -3,6 +3,9 @@
 DSH(DeepSeek Harness)LLM 适配器插件:**直接复用 Codex CLI 的本地登录凭证**,在 DSH 中
 使用 ChatGPT 订阅模型(gpt-5.6-sol 等),不需要 API Key。
 
+这是一个标准的 **dsh 插件包**:包内 `dsh.bundle.patch` 声明使其成为 profile 层,
+通过官方 `dsh plugin` 命令安装后**自动激活**,无需手工编辑任何 composition 文件。
+
 ## 原理
 
 Codex CLI(`codex login`)会把 ChatGPT 订阅的 OAuth 令牌写入 `~/.codex/auth.json`(或
@@ -28,73 +31,86 @@ Codex CLI(`codex login`)会把 ChatGPT 订阅的 OAuth 令牌写入 `~/.codex/au
 
 ```
 lib/
-  index.js      插件入口(注册 provider "codex" + 可配置 provider 目录)
+  index.js      插件入口(注册 provider "codex" + 可配置 provider 目录 + 设置段)
   adapter.js    CodexAdapter:fetch + SSE → StreamChunk(仿 dsh-llm-deepseek)
   auth.js       auth.json 读取 / 订阅令牌刷新 / 原子写回
   serialize.js  harness 消息 → Responses API 请求体
   translate.js  Responses SSE 事件 → StreamChunk
   sse.js        SSE 字节流解析(Responses 协议无 [DONE])
   models.js     模型目录:实时发现 → models_cache.json → 静态兜底
+  transport.js  可选 HTTP CONNECT 代理(https-proxy-agent + node-fetch)
   constants.js  wire 常量(端点/头/上下文窗口)
+cordis.bundle.yml  dsh.bundle 声明的 profile 层(插件行;安装后自动挂载)
 test/smoke.mjs  端到端冒烟测试(只读,绝不写 auth.json)
-install.ps1     dsh 部署接入脚本(junction + 校验 + patch 提示)
 ```
 
-## 接入 dsh
+## 安装(dsh 官方插件命令)
 
-1. **联调依赖**:本仓库代码直接 import `@deepseek-ai/dsh-llm` 等包,它们随 dsh 部署提供。
-   开发/测试时让本仓库能解析到它们:
+本机已安装 pnpm(`dsh plugin` 会转发给它)。安装已发布的包:
 
-   ```powershell
-   # 在仓库目录下建立指向 dsh 部署依赖树的 junction(node_modules 已 gitignore)
-   New-Item -ItemType Junction -Path .\node_modules -Target "C:\Users\Administrator\AppData\Roaming\npm\node_modules\@deepseek-ai\dsh\node_modules"
-   ```
+```powershell
+dsh plugin --profile web add dsh-llm-codex
+```
 
-2. **安装到部署**(或直接运行 `install.ps1`,它会做 2、3 两步并校验):
+本地开发直接加路径(pnpm 会以 `link:` 链接,改动即时生效):
 
-   ```powershell
-   .\install.ps1
-   ```
+```powershell
+dsh plugin --profile web add D:\CODE\dsh\dsh-llm-codex
+```
 
-   脚本在 `…\@deepseek-ai\dsh\node_modules\dsh-llm-codex` 建立指向本仓库的 junction,
-   使 cordis loader 能以包名解析到插件。`npm i -g @deepseek-ai/dsh` 升级后会清除
-   junction,重新运行脚本即可。
+`dsh plugin` 做了什么:在 profile 目录里执行 `pnpm add <spec>`,然后把安装结果与
+`dsh.profile.bundles` 层栈**自动 reconcile** —— 任何声明了 `dsh.bundle.patch` 的依赖
+自动成为 profile 层,`update` 时新版本获得 bundle 声明也会自动激活,`remove` 后自动
+移除。**无需手工编辑 cordis.patch.yml。**
 
-3. **加一行到 profile patch**(`%USERPROFILE%\.dsh\profiles\web\cordis.patch.yml`):
+验证组合结果(不启动服务):
 
-   ```yaml
-   - insert:
-       - id: llm-codex
-         name: 'dsh-llm-codex'
-   ```
+```powershell
+dsh --profile web --dump-config   # 应看到 "# == dsh-llm-codex" 与 llm-codex 行
+```
 
-   可选配置项(composer 行 config 或 settings.yaml 的 `llm-codex:` 段,热更新):
-   `clientVersion`(默认 `0.144.1`)、`writeBack`(默认 `true`)、`proxy`、
-   `authFile`、`modelsCacheFile`、`staticModels`(显式模型目录)。
+重启 dsh 后,Web 模型选择器出现 **Codex (ChatGPT 订阅)** provider,插件清单页
+(设置 → 插件)也会列出 `llm-codex` 条目。
 
-4. **重启 dsh**。之后 Web 的模型选择器(或 `settings.yaml` 的 `agent-default-model:`
-   段)会出现 `codex` provider:
+## 机器相关配置(settings.yaml,不进包)
 
-   ```yaml
-   agent-default-model:
-     provider: codex
-     model: gpt-5.6-sol
-     reasoningEffort: medium
-   ```
-
-## 代理
-
-Node 的原生 fetch 不读取系统代理。若 ChatGPT 后端需要走本地代理(如 Clash),
-在 `llm-codex:` 设置段配置:
+ChatGPT 后端通常需要走本地代理;Node 原生 fetch 不读系统代理,在
+`$DSH_HOME/settings.yaml` 配置:
 
 ```yaml
 llm-codex:
   proxy: http://127.0.0.1:7890
 ```
 
-或直接设置环境变量 `HTTPS_PROXY`(优先级:显式 `proxy` 配置 > `HTTPS_PROXY` >
-`HTTP_PROXY`;`NO_PROXY` 命中的主机直连)。代理经 `https-proxy-agent` +
-`node-fetch` 实现 CONNECT 隧道,这两个包随 dsh 部署提供。
+也可用环境变量 `HTTPS_PROXY`(优先级:显式 `proxy` 配置 > `HTTPS_PROXY` >
+`HTTP_PROXY`;`NO_PROXY` 命中的主机直连)。其他可选字段:`clientVersion`(默认
+`0.144.1`)、`writeBack`(默认 `true`)、`authFile`、`modelsCacheFile`、
+`staticModels`(显式模型目录)。设置段热更新,无需重启。
+
+选用 codex 作为默认模型(settings.yaml):
+
+```yaml
+agent-default-model:
+  provider: codex
+  model: gpt-5.6-sol
+  reasoningEffort: medium
+```
+
+## 发布到 npm(dsh 插件库)
+
+dsh 的"插件库"即 npm registry:`dsh.bundle.patch` 声明就是插件身份。
+
+```powershell
+npm login
+npm publish            # 仓库目录内执行
+# 任何机器上:
+dsh plugin --profile web add dsh-llm-codex
+dsh plugin --profile web update          # 升级所有 profile 插件
+dsh plugin --profile web remove dsh-llm-codex   # 移除
+```
+
+发布前检查:`files` 字段含 `lib` 与 `cordis.bundle.yml`;`dsh.bundle.patch` 指向的
+patch 文件只含插件行,不含任何机器相关的配置。
 
 ## 冒烟测试(真实凭证,只读)
 
@@ -113,7 +129,7 @@ node test\smoke.mjs gpt-5.6-sol --tools   # 额外验证工具调用路径
 | 现象 | 处理 |
 | --- | --- |
 | `MISSING_CREDENTIAL:无法读取 Codex 凭证文件` | 先运行 `codex login` 登录 |
-| `TRANSPORT:Connect Timeout` | 本机直连 ChatGPT 后端被墙;配置 `proxy`(见上文代理一节) |
+| `TRANSPORT:Connect Timeout` | 本机直连 ChatGPT 后端被墙;配置 `proxy`(见上文) |
 | HTTP 401 且刷新失败 | 订阅过期或被风控;运行 `codex login` 重新登录 |
 | HTTP 429 | 订阅额度/限流,稍后重试 |
 | `INVALID_REQUEST:System messages are not allowed` | 系统提示已自动改走 `instructions` 字段,不应出现;如出现请升级插件 |

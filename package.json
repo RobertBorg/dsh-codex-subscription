@@ -8,13 +8,33 @@
     ".": "./lib/index.js"
   },
   "files": [
-    "lib"
+    "lib",
+    "cordis.bundle.yml"
   ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "test": "node test/smoke.mjs"
+  },
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "cordis",
+    "llm",
+    "adapter",
+    "codex",
+    "chatgpt"
+  ],
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/yequ172672/dsh-llm-codex.git"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.bundle.yml"
+    }
   },
   "dependencies": {
     "@deepseek-ai/dsh-llm": "0.1.0-rc.6",
@@ -24,8 +44,5 @@
     "eventsource-parser": "^3.1.1",
     "https-proxy-agent": "^7.0.6",
     "node-fetch": "^3.3.2"
-  },
-  "peerDependencies": {
-    "@deepseek-ai/cordis": "^4.0.1"
   }
 }
