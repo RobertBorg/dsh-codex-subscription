@@ -67,6 +67,14 @@ dsh plugin --profile web add D:\CODE\dsh\dsh-llm-codex
 自动成为 profile 层,`update` 时新版本获得 bundle 声明也会自动激活,`remove` 后自动
 移除。**无需手工编辑 cordis.patch.yml。**
 
+> 💡 **版本范围建议**:请用**不带版本号**的方式安装(`add dsh-llm-codex`),pnpm 会保存
+> `^x.y.z` 范围,之后的 `dsh plugin update` 能自动收取更新。若 profile 里依赖被写成
+> 精确版本(例如 `"dsh-llm-codex": "0.1.0"`,常见于从本地 `link:` 依赖切换或显式指定
+> 版本号的情况),`update` 会显示 "Already up to date" 而不会升级;重新执行一次不带
+> 版本号的 `add` 即可回到范围跟踪。另外,刚发布的新版本可能触发 pnpm 的
+> `minimumReleaseAge` 供应链策略(写入 pnpm-workspace.yaml 的排除清单或短暂提示),
+> 属正常现象。
+
 验证组合结果(不启动服务):
 
 ```powershell
