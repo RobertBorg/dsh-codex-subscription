@@ -1,6 +1,6 @@
 # dsh-llm-codex
 
-> 📦 已发布到 npm:[dsh-llm-codex@0.1.0](https://www.npmjs.com/package/dsh-llm-codex)
+> 📦 已发布到 npm:[dsh-llm-codex@0.1.1](https://www.npmjs.com/package/dsh-llm-codex)
 > · 📚 GitHub:[yequ172672/dsh-codex-subscription](https://github.com/yequ172672/dsh-codex-subscription)
 > · 🏷️ 属于 [dsh-plugin](https://github.com/topics/dsh-plugin) 插件话题
 
@@ -9,6 +9,25 @@ DSH(DeepSeek Harness)LLM 适配器插件:**直接复用 Codex CLI 的本地登�
 
 这是一个标准的 **dsh 插件包**:包内 `dsh.bundle.patch` 声明使其成为 profile 层,
 通过官方 `dsh plugin` 命令安装后**自动激活**,无需手工编辑任何 composition 文件。
+
+## 搭配推荐:dsh-session-import-codex
+
+配合 [dsh-session-import-codex](https://github.com/xing01l/session-import-codex) 使用
+效果更佳:它把 Codex 的历史会话导入 DSH(会话 id 形如 `codex-<thread-id>`),与本插件的
+"凭证/模型复用"互补 —— 在 DSH 里既能用 Codex 订阅模型对话,又能无缝续聊 Codex 里
+开过的对话,实现"模型 + 历史"全链路打通。
+
+```powershell
+dsh plugin --profile web add dsh-session-import-codex
+# 迁移(离线流程:先停止 dsh web 进程 → dry-run → 正式导入 → 重启 dsh)
+pnpm --dir "$env:USERPROFILE\.dsh\profiles\web" exec dsh-import-codex --profile web --dry-run
+pnpm --dir "$env:USERPROFILE\.dsh\profiles\web" exec dsh-import-codex --profile web
+```
+
+> ⚠️ 已知问题:npm 包 `dsh-session-import-codex@0.1.0` 漏声明了
+> `@deepseek-ai/dsh-sdk-protocol` 依赖,直接安装后 CLI 报
+> `Cannot find package '@deepseek-ai/dsh-sdk-protocol'`,补装一次即可:
+> `dsh plugin --profile web add @deepseek-ai/dsh-sdk-protocol`。
 
 ## 原理
 
