@@ -32,12 +32,15 @@ const models = await adapter.listModels(provider);
 console.log(`[2] model catalog = ${models.length} models`);
 console.log('    ' + models.slice(0, 12).map((m) => m.id).join(', '));
 
-// ③ 流式对话
+// ③ 流式对话(带 maxTokens + reasoningEffort,模拟 DSH 循环的真实请求形状;
+// 订阅后端不支持 max_output_tokens,适配器应在发送前剥离)
 console.log(`[3] streaming "${model}"${withTools ? ' (with tools)' : ''} …`);
 const stream = adapter.stream({
   provider,
   model,
   system: '你是一个测试助手,回答尽量简短。',
+  reasoningEffort: 'max',
+  maxTokens: 128000,
   messages: [
     {
       role: 'user',

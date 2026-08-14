@@ -137,6 +137,7 @@ node test\smoke.mjs gpt-5.6-sol --tools   # 额外验证工具调用路径
 | HTTP 401 且刷新失败 | 订阅过期或被风控;运行 `codex login` 重新登录 |
 | HTTP 429 | 订阅额度/限流,稍后重试 |
 | `INVALID_REQUEST:System messages are not allowed` | 系统提示已自动改走 `instructions` 字段,不应出现;如出现请升级插件 |
+| `INVALID_REQUEST:Unsupported parameter` | 订阅后端拒绝 `max_output_tokens`/`temperature`/`stop`,适配器已自动剥离;如仍出现请升级插件 |
 | 模型列表为空 | 实时发现失败且本地无 models_cache.json 时使用内置静态列表 |
 
 ## 注意事项
