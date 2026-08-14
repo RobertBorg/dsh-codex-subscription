@@ -1,5 +1,9 @@
 # dsh-llm-codex
 
+> 📦 已发布到 npm:[dsh-llm-codex@0.1.0](https://www.npmjs.com/package/dsh-llm-codex)
+> · 📚 GitHub:[yequ172672/dsh-codex-subscription](https://github.com/yequ172672/dsh-codex-subscription)
+> · 🏷️ 属于 [dsh-plugin](https://github.com/topics/dsh-plugin) 插件话题
+
 DSH(DeepSeek Harness)LLM 适配器插件:**直接复用 Codex CLI 的本地登录凭证**,在 DSH 中
 使用 ChatGPT 订阅模型(gpt-5.6-sol 等),不需要 API Key。
 
