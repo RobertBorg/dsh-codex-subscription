@@ -60,8 +60,9 @@ lib/
   models.js     模型目录:实时发现 → models_cache.json → 静态兜底
   transport.js  可选 HTTP CONNECT 代理(https-proxy-agent + node-fetch)
   constants.js  wire 常量(端点/头/上下文窗口)
-cordis.bundle.yml  dsh.bundle 声明的 profile 层(插件行;安装后自动挂载)
-test/smoke.mjs  端到端冒烟测试(只读,绝不写 auth.json)
+cordis.bundle.yml   dsh.bundle 声明的 profile 层(插件行;安装后自动挂载)
+test/serialize.mjs  请求序列化单元测试
+test/smoke.mjs      端到端冒烟测试(只读,绝不写 auth.json)
 ```
 
 ## 安装(dsh 官方插件命令)
@@ -155,15 +156,16 @@ dsh plugin --profile web remove dsh-llm-codex   # 移除
 发布前检查:`files` 字段含 `lib` 与 `cordis.bundle.yml`;`dsh.bundle.patch` 指向的
 patch 文件只含插件行,不含任何机器相关的配置。
 
-## 冒烟测试(真实凭证,只读)
+## 测试
 
 ```powershell
-node test\smoke.mjs                  # 文本对话(默认模型 gpt-5.6-sol)
-node test\smoke.mjs gpt-5.5          # 指定模型
-node test\smoke.mjs gpt-5.6-sol --tools   # 额外验证工具调用路径
+npm test                              # 无凭证单元测试
+npm run test:smoke                    # 文本对话(默认模型 gpt-5.6-sol)
+npm run test:smoke -- gpt-5.5         # 指定模型
+npm run test:smoke -- gpt-5.6-sol --tools   # 额外验证工具调用路径
 ```
 
-输出凭证形态、模型目录(实时拉取)、一次真实流式对话的结果与 usage。
+冒烟测试输出凭证形态、模型目录(实时拉取)、一次真实流式对话的结果与 usage。
 测试默认只读(`writeBack: false`),绝不改写 auth.json;需要走代理时设置
 `HTTPS_PROXY`(如 `http://127.0.0.1:7890`)。
 
