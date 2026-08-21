@@ -4,7 +4,7 @@ import { createTransport } from '../lib/transport.js';
 import { CODEX_HEADERS, CODEX_HEADER_VALUES } from '../lib/constants.js';
 
 const proxy = 'http://127.0.0.1:7890';
-const credentials = new CodexCredentials({ writeBack: false });
+const credentials = new CodexCredentials({});
 const creds = await credentials.current();
 const transport = await createTransport({ proxy });
 

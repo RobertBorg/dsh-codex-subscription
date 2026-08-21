@@ -1,5 +1,5 @@
 /**
- * 端到端冒烟测试:使用真实的 Codex CLI 本地凭证(只读,writeBack: false),
+ * 端到端冒烟测试:使用真实的 Codex CLI 本地凭证(401 时 Codex CLI 可能刷新并持久化),
  * 验证 ① 凭证解析 ② 模型目录 ③ 一次真实的流式对话。
  *
  * 运行前提:本仓库目录下存在 node_modules(见 install.ps1 / README 的联调说明),
@@ -16,7 +16,6 @@ const withTools = process.argv.includes('--tools');
 const provider = 'codex';
 
 const config = {
-  writeBack: false, // 冒烟测试绝不改写用户的 auth.json
   clientVersion: '0.144.1',
   streamIdleTimeoutMs: 180_000,
 };

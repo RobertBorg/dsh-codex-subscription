@@ -15,7 +15,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test test/serialize.mjs",
+    "test": "node --test test/serialize.mjs test/auth.mjs test/adapter-auth.mjs",
     "test:smoke": "node test/smoke.mjs"
   },
   "keywords": [
