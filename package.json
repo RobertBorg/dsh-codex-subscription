@@ -1,11 +1,13 @@
 {
   "name": "dsh-llm-codex",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "DSH LLM 适配器插件:复用 Codex CLI 本地登录凭证(~/.codex/auth.json)在 DSH 中直接使用 ChatGPT 订阅模型",
   "type": "module",
   "main": "lib/index.js",
   "exports": {
-    ".": "./lib/index.js"
+    ".": "./lib/index.js",
+    "./client": "./lib/client.js",
+    "./package.json": "./package.json"
   },
   "files": [
     "lib",
@@ -15,7 +17,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test test/serialize.mjs test/auth.mjs test/adapter-auth.mjs",
+    "test": "node --test test/serialize.mjs test/auth.mjs test/adapter-auth.mjs test/usage.mjs",
     "test:smoke": "node test/smoke.mjs"
   },
   "keywords": [
@@ -35,6 +37,14 @@
   "dsh": {
     "bundle": {
       "patch": "./cordis.bundle.yml"
+    },
+    "client": {
+      "inject": [
+        "@deepseek-ai/dsh-client-runtime",
+        "@deepseek-ai/dsh-client-ui-conversation",
+        "@deepseek-ai/dsh-client-ui-model-selection"
+      ],
+      "platform": "web"
     }
   },
   "dependencies": {

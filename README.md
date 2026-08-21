@@ -43,6 +43,10 @@ Codex CLI(`codex login`)会把 ChatGPT 订阅的 OAuth 令牌写入 `~/.codex/au
   `codex app-server --stdio`,通过 JSONL `account/read` 请求 Codex 主动刷新。OAuth
   refresh-token 轮换与 `auth.json` 持久化完全由官方 Codex CLI 负责;app-server
   成功退出后,本插件重读 Codex 的凭证并最多重试原 Responses 请求一次。
+- **订阅用量**:当当前会话选中 `codex` provider 时,Web composer 在模型和上下文
+  指示器旁边显示 `Session` / `Weekly` 已用百分比。数据由另一个短生命周期的
+  `codex app-server --stdio` 通过 `account/rateLimits/read` 读取,五分钟缓存并去重并发查询。
+  浏览器只收到套餐名称、百分比和重置时间,不会收到任何令牌。
 - **模型目录**:优先实时拉取 `GET {base}/codex/models`,失败时回退
   `~/.codex/models_cache.json`,再回退内置静态列表。
 - **协议**:OpenAI Responses API(`stream: true` SSE),推理摘要、正文、工具调用分别映射为
@@ -53,9 +57,11 @@ Codex CLI(`codex login`)会把 ChatGPT 订阅的 OAuth 令牌写入 `~/.codex/au
 ```
 lib/
   index.js      插件入口(注册 provider "codex" + 可配置 provider 目录 + 设置段)
+  client.js     Web client face:composer 内的 Session/Weekly 用量指示器
   adapter.js    CodexAdapter:fetch + SSE → StreamChunk(仿 dsh-llm-deepseek)
   auth.js       auth.json 只读解析 / 刷新协调
   codex-app-server.js  短生命周期 Codex app-server JSONL 客户端
+  usage.js      app-server 用量查询 / 五分钟缓存 / 同源只读路由
   serialize.js  harness 消息 → Responses API 请求体
   translate.js  Responses SSE 事件 → StreamChunk
   sse.js        SSE 字节流解析(Responses 协议无 [DONE])
@@ -117,7 +123,8 @@ dsh --profile web --dump-config   # 应看到 "# == dsh-llm-codex" 与 llm-codex
 ```
 
 重启 dsh 后,Web 模型选择器出现 **Codex (ChatGPT 订阅)** provider,插件清单页
-(设置 → 插件)也会列出 `llm-codex` 条目。
+(设置 → 插件)也会列出 `llm-codex` 条目。选中 Codex 模型后,composer 右侧会显示
+`S <n>% · W <n>%`;点击即可查看 Session/Weekly 进度条和重置倒计时,无需进入设置页。
 
 ## 机器相关配置(settings.yaml,不进包)
 
@@ -188,6 +195,7 @@ npm run test:smoke -- gpt-5.6-sol --tools   # 额外验证工具调用路径
 | `TRANSPORT:Connect Timeout` | 本机直连 ChatGPT 后端被墙;配置 `proxy`(见上文) |
 | HTTP 401 且提示找不到 Codex | 安装兼容的 Codex CLI,确认 `codex` 在 PATH,或设置 `codexCommand` |
 | app-server 方法不存在/响应不兼容 | 升级 Codex CLI 后重试 |
+| composer 显示 `Codex !` | 点击查看错误;确认 Codex CLI 已登录且支持 `account/rateLimits/read` |
 | HTTP 401 且刷新失败/未登录 | 运行 `codex login` 重新登录;自定义 `authFile` 时确认其父目录是对应的 Codex home |
 | HTTP 429 | 订阅额度/限流,稍后重试 |
 | `INVALID_REQUEST:System messages are not allowed` | 系统提示已自动改走 `instructions` 字段,不应出现;如出现请升级插件 |

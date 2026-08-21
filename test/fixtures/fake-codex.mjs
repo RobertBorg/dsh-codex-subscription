@@ -58,8 +58,44 @@ input.on('line', async (line) => {
     return;
   }
 
+  if (config.mode === 'usage' && state === 3) {
+    if (message.method !== 'account/rateLimits/read' || message.id !== 2 || Object.hasOwn(message, 'params')) {
+      process.exit(69);
+    }
+    state = 4;
+    send({
+      id: 2,
+      result: {
+        rateLimits: {
+          limitId: 'codex',
+          limitName: null,
+          primary: {
+            usedPercent: config.sessionUsedPercent ?? 35,
+            windowDurationMins: 300,
+            resetsAt: 1_787_318_400,
+          },
+          secondary: {
+            usedPercent: config.weeklyUsedPercent ?? 20,
+            windowDurationMins: 10_080,
+            resetsAt: 1_787_750_400,
+          },
+        },
+      },
+    });
+    return;
+  }
+
   if (state !== 2 || message.method !== 'account/read' || message.id !== 1) process.exit(67);
   state = 3;
+
+  if (config.mode === 'usage') {
+    if (message.params?.refreshToken !== false) process.exit(68);
+    send({
+      id: 1,
+      result: { account: { type: 'chatgpt', email: null, planType: config.planType ?? 'plus' } },
+    });
+    return;
+  }
 
   if (config.mode === 'premature') process.exit(0);
   if (config.mode === 'timeout') return;
