@@ -46,6 +46,8 @@ Codex CLI(`codex login`)会把 ChatGPT 订阅的 OAuth 令牌写入 `~/.codex/au
 - **订阅用量**:当当前会话选中 `codex` provider 时,Web composer 在模型和上下文
   指示器旁边显示 `Session` / `Weekly` 已用百分比。数据由另一个短生命周期的
   `codex app-server --stdio` 通过 `account/rateLimits/read` 读取,五分钟缓存并去重并发查询。
+  查询在选中 Codex、打开用量弹层或 Codex turn 结束时触发,不做后台定时轮询;
+  五分钟内的重复触发直接返回 Host 缓存。
   浏览器只收到套餐名称、百分比和重置时间,不会收到任何令牌。
 - **模型目录**:优先实时拉取 `GET {base}/codex/models`,失败时回退
   `~/.codex/models_cache.json`,再回退内置静态列表。

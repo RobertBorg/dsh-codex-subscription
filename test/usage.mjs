@@ -109,7 +109,11 @@ test('normalizes the Session and Weekly windows without credential fields', () =
 test('concurrent and cached usage reads spawn one app-server process', async () => {
   const home = await makeHome();
   const config = options(home);
-  const usage = new CodexUsage(() => config, new CodexCredentials(config));
+  let now = 1_787_300_000_000;
+  const usage = new CodexUsage(() => config, new CodexCredentials(config), {
+    cacheTtlMs: 5 * 60 * 1_000,
+    now: () => now,
+  });
   const first = usage.read();
   const second = usage.read();
   assert.strictEqual(first, second);
@@ -119,6 +123,12 @@ test('concurrent and cached usage reads spawn one app-server process', async () 
   assert.equal(a.weekly.usedPercent, 61);
   await usage.read();
   assert.equal(await spawnCount(home), 1);
+  now += 5 * 60 * 1_000 - 1;
+  await usage.read();
+  assert.equal(await spawnCount(home), 1);
+  now += 1;
+  await usage.read();
+  assert.equal(await spawnCount(home), 2);
 });
 
 test('API-key usage does not spawn app-server', async () => {
@@ -179,6 +189,8 @@ test('package exposes a client face registered for the composer right slot', asy
   assert.match(client, /conversation\.input\.right/);
   assert.match(client, /Session/);
   assert.match(client, /Weekly/);
+  assert.match(client, /session\.turnEnds/);
+  assert.doesNotMatch(client, /setInterval/);
   assert.doesNotMatch(client, /access_token|refresh_token|authorization/i);
 });
 
